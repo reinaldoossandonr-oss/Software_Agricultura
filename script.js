@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const clienteSupabase = supabase.createClient(
-        'https://legtxgdwqjfzvlvheaao.supabase.co', 
-        'sb_publishable_OpquiXUBHpb7_a9MvT92Qw_jC8V1...'
-    );
+    // Aquí el script toma las variables que inyectó Vercel
+    const clienteSupabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
     window.mostrarSeccion = (id, el) => {
         document.querySelectorAll('.main-content > div[id^="seccion-"]').forEach(s => s.classList.add('hidden'));
