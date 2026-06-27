@@ -9,18 +9,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    <script>
+        const SUPABASE_URL = 'https://legtxgdwqjfzvlvheaao.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZ3R4Z2R3cWpmenZsdmhlYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM5MDAsImV4cCI6MjA5NzYzOTkwMH0.EXACa14BiJshtfU8i-1SmpjTtOYjlCjyNUiazd8RX20';
+        const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Verifica si hay sesión, si no, manda al login
+        clienteSupabase.auth.getSession().then(({ data }) => {
+            if (!data.session) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+
     <div class="dashboard-container">
         <div class="sidebar">
             <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width:160px; margin: 0 auto; display: block;">
             <div style="margin-top: 30px;">
                 <div class="nav-item active" onclick="window.mostrarSeccion('dashboard', this)">📊 Dashboard</div>
                 <div class="nav-item" onclick="window.mostrarSeccion('dotacion', this)">👥 Dotación</div>
+                <div class="nav-item" onclick="clienteSupabase.auth.signOut().then(() => window.location.href='login.html')">🚪 Salir</div>
             </div>
         </div>
-
+        
         <div class="main-content">
-            <div id="mensaje-feedback"></div>
-            
             <div id="seccion-dashboard">
                 <h2>Dashboard</h2>
                 <div class="kpi-container">
@@ -30,35 +42,7 @@
                     <canvas id="graficoRendimiento"></canvas>
                 </div>
             </div>
-
-            <div id="seccion-dotacion" class="hidden">
-                <h2>Dotación</h2>
-                <button class="btn-action" onclick="document.getElementById('modalRegistro').style.display='flex'">+ Añadir</button>
-                <table id="tablaDotacion" style="width: 100%; margin-top: 20px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #eee;">
-                            <th style="text-align: left; padding: 10px;">Nombre</th>
-                            <th style="text-align: left; padding: 10px;">Cargo</th>
-                            <th style="text-align: left; padding: 10px;">Área</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoTabla"></tbody>
-                </table>
             </div>
-        </div>
-    </div>
-
-    <div id="modalRegistro" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div class="modal-content" style="background:white; padding:30px; border-radius:16px; width: 300px;">
-            <h3>Nuevo Empleado</h3>
-            <form id="formNuevoUsuario">
-                <input type="text" name="nombre" placeholder="Nombre" required style="width: 100%; margin-bottom: 10px;"><br>
-                <input type="text" name="apellido" placeholder="Apellido" required style="width: 100%; margin-bottom: 10px;"><br>
-                <input type="text" name="rol_cargo" placeholder="Rol" required style="width: 100%; margin-bottom: 10px;"><br>
-                <input type="text" name="area_operacion" placeholder="Área" required style="width: 100%; margin-bottom: 10px;"><br>
-                <button type="submit" class="btn-action" style="width: 100%;">Guardar en Axioma</button>
-            </form>
-        </div>
     </div>
     
     <script src="script.js"></script>
