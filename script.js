@@ -1,6 +1,6 @@
 // 1. Inicialización
 const SUPABASE_URL = 'https://legtxgdwqjfzvlvheaao.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZ3R4Z2R3cWpmenZsdmhlYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM5MDAsImV4cCI6MjA5NzYzOTkwMH0.EXACa14BiJshtfU8i-1SmpjTtOYjlCjyNUiazd8RX20'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZ3R4Z2R3cWpmenZsdmhlYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM5MDAsImV4cCI6MjA5NzYzOTkwMH0.EXACa14BiJshtfU8i-1SmpjTtOYjlCjyNUiazd8RX20'; // RECUERDA PONER AQUÍ LA NUEVA CLAVE
 
 const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -16,7 +16,20 @@ window.mostrarSeccion = (id, el) => {
     if(id === 'dotacion') cargarDotacion();
 };
 
-// 3. Carga de datos de la tabla 'dotacion'
+// 3. Función del buscador (Nueva)
+window.filtrarTabla = () => {
+    const input = document.getElementById('buscadorDotacion');
+    const filtro = input.value.toLowerCase();
+    const tabla = document.getElementById('cuerpoTabla');
+    const filas = tabla.getElementsByTagName('tr');
+
+    for (let i = 0; i < filas.length; i++) {
+        const textoFila = filas[i].textContent.toLowerCase();
+        filas[i].style.display = textoFila.includes(filtro) ? "" : "none";
+    }
+};
+
+// 4. Carga de datos de la tabla 'dotacion'
 async function cargarDotacion() {
     const { data, error } = await clienteSupabase.from('dotacion').select('*');
     if (error) { console.error("Error cargando dotación:", error); return; }
@@ -54,22 +67,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Carga, agrupación y gráfico de 'asistencia'
-    clienteSupabase.from('asistencia').select('fecha, cantidad_producida').then(({ data, error }) => {
-        if (error) { console.error("Error gráfico:", error); return; }
-        if (!data || data.length === 0) return;
+    const ctx = document.getElementById('graficoRendimiento');
+    if (ctx) {
+        clienteSupabase.from('asistencia').select('fecha, cantidad_producida').then(({ data, error }) => {
+            if (error) { console.error("Error gráfico:", error); return; }
+            if (!data || data.length === 0) return;
 
-        // Sumar producción por día
-        const mapaProduccion = data.reduce((acc, curr) => {
-            const fecha = curr.fecha;
-            acc[fecha] = (acc[fecha] || 0) + (curr.cantidad_producida || 0);
-            return acc;
-        }, {});
+            const mapaProduccion = data.reduce((acc, curr) => {
+                const fecha = curr.fecha;
+                acc[fecha] = (acc[fecha] || 0) + (curr.cantidad_producida || 0);
+                return acc;
+            }, {});
 
-        const fechas = Object.keys(mapaProduccion).sort();
-        const totales = fechas.map(f => mapaProduccion[f]);
-        
-        const ctx = document.getElementById('graficoRendimiento');
-        if (ctx) {
+            const fechas = Object.keys(mapaProduccion).sort();
+            const totales = fechas.map(f => mapaProduccion[f]);
+            
             new Chart(ctx.getContext('2d'), { 
                 type: 'bar', 
                 data: { 
@@ -81,6 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }] 
                 }
             });
-        }
-    });
+        });
+    }
 });
