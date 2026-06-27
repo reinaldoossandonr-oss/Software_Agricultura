@@ -10,14 +10,16 @@
 </head>
 <body>
     <script>
-        const SUPABASE_URL = 'https://legtxgdwqjfzvlvheaao.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZ3R4Z2R3cWpmenZsdmhlYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNjM5MDAsImV4cCI6MjA5NzYzOTkwMH0.EXACa14BiJshtfU8i-1SmpjTtOYjlCjyNUiazd8RX20';
-        const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Verifica si hay sesión, si no, manda al login
-        clienteSupabase.auth.getSession().then(({ data }) => {
-            if (!data.session) {
-                window.location.href = 'login.html';
+        // Nota: No definimos SUPABASE_URL ni KEYS aquí para evitar conflictos con script.js
+        // Suponemos que script.js ya inicializó clienteSupabase
+        // Esperamos un poco a que cargue script.js para verificar la sesión
+        window.addEventListener('load', () => {
+            if (typeof clienteSupabase !== 'undefined') {
+                clienteSupabase.auth.getSession().then(({ data }) => {
+                    if (!data.session) {
+                        window.location.href = 'login.html';
+                    }
+                });
             }
         });
     </script>
@@ -42,7 +44,11 @@
                     <canvas id="graficoRendimiento"></canvas>
                 </div>
             </div>
-            </div>
+
+            <div id="seccion-dotacion" class="hidden">
+                <h2>Dotación</h2>
+                </div>
+        </div>
     </div>
     
     <script src="script.js"></script>
