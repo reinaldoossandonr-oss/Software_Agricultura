@@ -101,7 +101,7 @@ window.cerrarSesion = async () => {
     }
 };
 
-// 7. Registro de movimientos
+// 7. Registro de movimientos (CORREGIDO PARA ACTUALIZACIÓN)
 window.registrarMovimiento = async (event, tipo) => {
     event.preventDefault();
     const form = event.target;
@@ -126,8 +126,13 @@ window.registrarMovimiento = async (event, tipo) => {
         if (response.ok) {
             alert(`${tipo} registrado con éxito.`);
             form.reset();
-            cargarInventario();
-            cargarDatosGrafico();
+            
+            // Retardo añadido para asegurar que la DB procese el cambio antes de recargar
+            setTimeout(async () => {
+                await cargarInventario();
+                await cargarDatosGrafico();
+            }, 500);
+
         } else {
             const err = await response.json();
             alert('Error: ' + (err.detail || 'No se pudo registrar el movimiento.'));
