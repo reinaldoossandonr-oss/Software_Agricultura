@@ -29,7 +29,7 @@ window.filtrarInventario = () => {
     }
 };
 
-// Función para actualizar las tarjetas KPI (Nueva)
+// Función para actualizar las tarjetas KPI
 function actualizarKPIs(datos) {
     const optimos = datos.filter(p => p['Estado Stock'] === 'Óptimo').length;
     const reponer = datos.filter(p => p['Estado Stock'] === 'REPONER').length;
@@ -94,7 +94,7 @@ async function cargarDatosGrafico() {
     } catch (err) { console.error("Error gráfico stock:", err); }
 }
 
-// Nueva función para gráfico de línea de ventas (Nueva)
+// Nueva función para gráfico de línea de ventas
 async function cargarGraficoVentas() {
     const ctx = document.getElementById('graficoVentas');
     if (!ctx) return;
@@ -116,7 +116,11 @@ async function cargarGraficoVentas() {
                     fill: true
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } }
+            }
         });
     } catch (err) { console.error("Error gráfico ventas:", err); }
 }
@@ -152,7 +156,7 @@ window.registrarMovimiento = async (event, tipo) => {
             setTimeout(async () => {
                 await cargarInventario();
                 await cargarDatosGrafico();
-                await cargarGraficoVentas(); // Actualiza también el gráfico nuevo
+                await cargarGraficoVentas();
             }, 500);
         } else {
             const err = await response.json();
