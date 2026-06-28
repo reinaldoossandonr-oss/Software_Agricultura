@@ -6,18 +6,13 @@ let miGrafico;
 
 // 2. Función global de navegación
 window.mostrarSeccion = (id, el) => {
-    // Ocultar todas las secciones
     document.querySelectorAll('main > div[id^="seccion-"]').forEach(s => s.classList.add('hidden'));
-    
-    // Mostrar la seleccionada
     const seccion = document.getElementById('seccion-' + id);
     if(seccion) seccion.classList.remove('hidden');
     
-    // Actualizar clases de navegación
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if(el) el.classList.add('active');
     
-    // Si vamos a inventario, recargar datos
     if(id === 'inventario') cargarInventario();
 };
 
@@ -26,6 +21,7 @@ window.filtrarInventario = () => {
     const input = document.getElementById('buscadorInventario');
     const filtro = input.value.toLowerCase();
     const tabla = document.getElementById('cuerpoTablaInventario');
+    if(!tabla) return;
     const filas = tabla.getElementsByTagName('tr');
 
     for (let i = 0; i < filas.length; i++) {
@@ -52,7 +48,7 @@ async function cargarInventario() {
             `).join('');
         }
     } catch (err) {
-        console.error("Error conectando con API Render para tabla:", err);
+        console.error("Error cargando tabla:", err);
     }
 }
 
@@ -81,14 +77,13 @@ async function cargarDatosGrafico() {
             options: { responsive: true, maintainAspectRatio: false }
         });
     } catch (err) {
-        console.error("Error cargando gráfico desde API:", err);
+        console.error("Error cargando gráfico:", err);
     }
 }
 
 // 6. Cierre de sesión
 window.cerrarSesion = async () => {
     try {
-        // Asegúrate de que clienteSupabase esté definido en tu proyecto
         if(typeof clienteSupabase !== 'undefined') {
             await clienteSupabase.auth.signOut();
         }
@@ -98,9 +93,35 @@ window.cerrarSesion = async () => {
     }
 };
 
+// 7. Registro de movimientos (Recepción, Picking, Ajuste)
+window.registrarMovimiento = async (event, tipo) => {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const datos = Object.fromEntries(formData.entries());
+    datos.tipo = tipo;
+
+    try {
+        const response = await fetch(`${API_URL}/api/v1/logistica/movimientos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+
+        if (response.ok) {
+            alert(`${tipo} registrado con éxito.`);
+            form.reset();
+            if (typeof cargarInventario === 'function') cargarInventario();
+        } else {
+            alert('Error al registrar en el servidor.');
+        }
+    } catch (err) {
+        console.error("Error en registro:", err);
+    }
+};
+
 // --- INICIALIZACIÓN AUTOMÁTICA ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Cargamos ambas cosas al entrar al index.html
     cargarInventario();
     cargarDatosGrafico();
 });
