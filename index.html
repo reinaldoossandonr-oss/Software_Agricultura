@@ -6,61 +6,105 @@
     <title>Axioma Flux | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background-color: #f4f7f6; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        /* Header ajustado: flex-grow en el nav para empujar el botón al final */
-        header { background: white; padding: 15px 40px; display: flex; align-items: center; border-bottom: 1px solid #e0e0e0; gap: 40px; }
-        .nav-container { display: flex; gap: 20px; align-items: center; flex-grow: 1; }
-        .nav-item { cursor: pointer; color: #475569; text-decoration: none; font-weight: 500; }
-        .nav-item.active { color: #1aabf0; }
-        
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; max-width: 300px; }
-        .hidden { display: none; }
-    </style>
 </head>
 <body>
 
     <header>
         <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width: 140px;">
-        
         <nav class="nav-container">
             <a href="index.html" class="nav-item active">Dashboard</a>
-            <a href="inventario.html" class="nav-item">Inventario</a>
         </nav>
-
-        <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
+        <button onclick="cerrarSesion()">Salir</button>
     </header>
 
-    <main style="padding: 40px; max-width: 1200px; margin: auto;">
-        
-        <div id="seccion-dashboard">
-            <h2 style="color: #333;">Dashboard de Logística</h2>
+    <main>
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Distribución de Stock</h3>
+                <canvas id="graficoStock" style="height: 300px;"></canvas>
+            </div>
             
             <div class="card">
-                <canvas id="graficoStock" style="max-height: 300px;"></canvas>
-            </div>
-
-            <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin:0;">Inventario en Tiempo Real</h3>
+                    <h3>Reporte de Inventario</h3>
                     <input type="text" id="buscadorInventario" placeholder="Buscar producto..." onkeyup="filtrarInventario()">
                 </div>
-                <table style="width: 100%; border-collapse: collapse;">
+                <table>
                     <thead>
-                        <tr style="text-align: left; color: #666; border-bottom: 2px solid #f1f5f9;">
-                            <th style="padding: 12px;">SKU</th>
-                            <th style="padding: 12px;">Nombre</th>
-                            <th style="padding: 12px;">Stock Real</th>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>SKU</th>
+                            <th>Stock</th>
+                            <th>Consumo</th>
+                            <th>Días</th>
+                            <th>Estado</th>
+                            <th>A Reponer</th>
                         </tr>
                     </thead>
-                    <tbody id="cuerpoTablaInventario">
-                        </tbody>
+                    <tbody id="cuerpoTablaInventario"></tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <script src="script.js"></script>
+    <script>
+        const API_URL = 'https://axioma-flux.onrender.com';
+        let miGrafico;
+
+        async function cargarInventario() {
+            try {
+                const response = await fetch(`${API_URL}/api/v1/logistica/reporte-inventario`);
+                const result = await response.json();
+                const tabla = document.getElementById('cuerpoTablaInventario');
+                
+                if (tabla && result.data) {
+                    tabla.innerHTML = result.data.map(p => {
+                        const estadoClase = p['Estado Stock'] === 'REPONER' ? 'status-reponer' : 'status-optimo';
+                        return `
+                            <tr>
+                                <td>${p['Nombre'] || 'N/A'}</td>
+                                <td>${p['SKU'] || 'N/A'}</td>
+                                <td style="font-weight: bold;">${p['Stock Actual'] || 0}</td>
+                                <td>${p['Consumo Promedio Diario'] || 0}</td>
+                                <td>${p['Dias Inventario'] || 0}</td>
+                                <td><span class="${estadoClase}">${p['Estado Stock']}</span></td>
+                                <td style="font-weight: bold;">${p['Cantidad a Reponer'] || 0}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (err) { console.error("Error inventario:", err); }
+        }
+
+        async function cargarDatosGrafico() {
+            const ctx = document.getElementById('graficoStock');
+            if (!ctx) return;
+            try {
+                const response = await fetch(`${API_URL}/api/v1/logistica/stock`);
+                const result = await response.json();
+                if (miGrafico) miGrafico.destroy();
+                miGrafico = new Chart(ctx.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: result.data.map(p => p.nombre), datasets: [{ label: 'Stock', data: result.data.map(p => p.stock_actual), backgroundColor: '#1aabf0' }] },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            } catch (err) { console.error("Error gráfico:", err); }
+        }
+
+        window.filtrarInventario = () => {
+            const filtro = document.getElementById('buscadorInventario').value.toLowerCase();
+            const filas = document.getElementById('cuerpoTablaInventario').getElementsByTagName('tr');
+            for (let i = 0; i < filas.length; i++) {
+                filas[i].style.display = filas[i].textContent.toLowerCase().includes(filtro) ? "" : "none";
+            }
+        };
+
+        window.cerrarSesion = () => { window.location.href = 'login.html'; };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarInventario();
+            cargarDatosGrafico();
+        });
+    </script>
 </body>
 </html>
