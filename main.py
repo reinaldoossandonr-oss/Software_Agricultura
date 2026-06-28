@@ -34,8 +34,8 @@ class Movimiento(BaseModel):
     producto_id: str
     tipo: str
     cantidad: float
-    ubicacion_id: str = None # Campo opcional por si no se envía en todos los formularios
-    pedido_id: str = None    # Campo opcional
+    ubicacion_id: str = None 
+    pedido_id: str = None    
 
 # --- ENDPOINTS ---
 
@@ -52,14 +52,19 @@ def obtener_stock():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 2. Registrar movimiento (ACTUALIZADO para recibir JSON)
+# 2. Registrar movimiento
 @app.post("/api/v1/logistica/movimientos")
 def registrar_movimiento(movimiento: Movimiento):
     try:
-        # Convertimos el modelo a diccionario, excluyendo campos None si es necesario
         data_to_insert = movimiento.dict(exclude_none=True)
         
-        response = supabase.table("movimientos").insert(data_to_insert).execute()
+        # Buscar el UUID real de la ubicación si se envió el código legible (ej: A-1-01)
+        if "ubicacion_id" in data_to_insert:
+            res = supabase.table("ubicaciones").select("id").eq("ubicacion_id", data_to_insert["ubicacion_id"]).single().execute()
+            if res.data:
+                data_to_insert["ubicacion_id"] = res.data["id"]
+        
+        supabase.table("movimientos").insert(data_to_insert).execute()
         return {"success": True, "message": "Movimiento registrado"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

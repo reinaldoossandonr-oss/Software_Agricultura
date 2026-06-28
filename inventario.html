@@ -34,7 +34,7 @@
                 <form id="formRecepcion" onsubmit="registrarMovimiento(event, 'INGRESO')">
                     <input type="hidden" name="empresa_id" value="00000000-0000-0000-0000-000000000000">
                     <div class="form-group"><label>Producto ID</label><input type="text" name="producto_id" required></div>
-                    <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion_id" required></div>
+                    <div class="form-group"><label>Ubicación (Ej: A-1-01)</label><input type="text" name="ubicacion_id" required></div>
                     <div class="form-group"><label>Cantidad</label><input type="number" name="cantidad" step="0.01" required></div>
                     <button type="submit" class="btn-action">Confirmar Ingreso</button>
                 </form>
@@ -58,9 +58,9 @@
                     <div class="form-group"><label>Producto ID</label><input type="text" name="producto_id" required></div>
                     <div class="form-group"><label>Motivo</label>
                         <select name="motivo">
-                            <option>Merma</option>
-                            <option>Auditoría Física</option>
-                            <option>Error de Sistema</option>
+                            <option value="Merma">Merma</option>
+                            <option value="Auditoría">Auditoría Física</option>
+                            <option value="Error">Error de Sistema</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Cantidad (±)</label><input type="number" name="cantidad" step="0.01" required></div>
@@ -69,7 +69,6 @@
             </div>
         </div>
     </main>
-
     <script src="script.js"></script>
 </body>
 </html>

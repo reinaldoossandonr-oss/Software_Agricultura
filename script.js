@@ -30,34 +30,22 @@ window.filtrarInventario = () => {
     }
 };
 
-// 4. Carga de datos de productos (Tabla) - CORREGIDA
+// 4. Carga de datos de productos (Tabla)
 async function cargarInventario() {
     try {
         const response = await fetch(`${API_URL}/api/v1/logistica/stock`);
         const result = await response.json();
         
-        // --- AQUÍ ESTÁ EL TRUCO ---
-        // Vamos a imprimir el primer elemento para ver los nombres reales de los campos
-        if (result.data && result.data.length > 0) {
-            console.log("Estructura de un objeto de producto:", result.data[0]);
-        }
-
         const tabla = document.getElementById('cuerpoTablaInventario');
         if (tabla && result.data) {
-            tabla.innerHTML = result.data.map(p => {
-                // Si 'p.sku' es undefined, buscaremos el nombre correcto.
-                // Revisa en la consola del navegador (F12) qué sale en el console.log de arriba
-                // y ajusta 'p.sku' por el nombre correcto que aparezca.
-                const skuMostrado = p.sku || "N/A"; 
-                
-                return `
+            tabla.innerHTML = result.data.map(p => `
                 <tr>
-                    <td style="padding: 15px;">${skuMostrado}</td>
+                    <td style="padding: 15px;">${p.sku || 'N/A'}</td>
                     <td style="padding: 15px;">${p.nombre || 'Sin nombre'}</td>
                     <td style="padding: 15px;">${p.categoria || 'Sin categoría'}</td>
                     <td style="padding: 15px; font-weight: bold;">${p.stock_actual || 0}</td>
-                </tr>`;
-            }).join('');
+                </tr>
+            `).join('');
         }
     } catch (err) {
         console.error("Error cargando tabla:", err);
@@ -110,7 +98,10 @@ window.registrarMovimiento = async (event, tipo) => {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    const datos = Object.fromEntries(formData.entries());
+    
+    // Convertimos FormData a objeto plano
+    const datos = {};
+    formData.forEach((value, key) => { datos[key] = value; });
     datos.tipo = tipo;
 
     try {
@@ -123,12 +114,15 @@ window.registrarMovimiento = async (event, tipo) => {
         if (response.ok) {
             alert(`${tipo} registrado con éxito.`);
             form.reset();
+            // Actualizamos la tabla si estamos en la vista de inventario
             if (typeof cargarInventario === 'function') cargarInventario();
         } else {
-            alert('Error al registrar en el servidor.');
+            const err = await response.json();
+            alert('Error: ' + (err.detail || 'No se pudo registrar el movimiento.'));
         }
     } catch (err) {
         console.error("Error en registro:", err);
+        alert("Error de conexión con el servidor.");
     }
 };
 
