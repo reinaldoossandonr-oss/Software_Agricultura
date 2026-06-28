@@ -77,6 +77,18 @@ async function cargarDatosGrafico(ctx) {
     }
 }
 
+// 6. Función para cerrar sesión (Añadida para el botón del HTML)
+window.cerrarSesion = async () => {
+    try {
+        const { error } = await clienteSupabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'login.html';
+    } catch (err) {
+        console.error("Error al cerrar sesión:", err);
+        window.location.href = 'login.html';
+    }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     const ctx = document.getElementById('graficoStock');
     if (ctx) cargarDatosGrafico(ctx);
