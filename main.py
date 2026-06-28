@@ -58,29 +58,15 @@ def obtener_reporte_inventario():
 @app.get("/api/v1/logistica/ventas-diarias")
 def obtener_ventas_diarias():
     try:
-        # SQL directo para agrupar por fecha los últimos 30 días
-        query = """
-        SELECT 
-            DATE(timestamp) AS fecha, 
-            SUM(ABS(cantidad)) AS total
-        FROM movimientos
-        WHERE tipo = 'SALIDA'
-          AND timestamp >= NOW() - INTERVAL '30 days'
-        GROUP BY fecha
-        ORDER BY fecha ASC
-        """
-        # Ejecutamos a través de rpc o consulta directa si tu configuración lo permite.
-        # Aquí usamos la forma estándar de Supabase para ejecutar SQL complejo
-        response = supabase.rpc("execute_sql", {"query": query}).execute()
+        # Consulta a la vista SQL creada en Supabase
+        response = supabase.table("vista_ventas_mensuales").select("*").execute()
         
         # Transformamos los datos para Chart.js
-        labels = [row['fecha'] for row in response.data]
-        data = [row['total'] for row in response.data]
+        labels = [str(row['fecha']) for row in response.data]
+        data = [float(row['total']) for row in response.data]
         
         return {"labels": labels, "data": data}
     except Exception as e:
-        # Si no tienes configurado el RPC 'execute_sql', 
-        # puedes usar una vista SQL simple en Supabase y llamarla con .select("*")
         raise HTTPException(status_code=500, detail=str(e))
 
 # 4. Registrar movimiento
