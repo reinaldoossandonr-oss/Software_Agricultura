@@ -6,6 +6,13 @@
     <title>Inventario | Axioma Flux</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        body { background-color: #f4f7f6; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        /* Header sincronizado con el index */
+        header { background: white; padding: 15px 40px; display: flex; align-items: center; border-bottom: 1px solid #e0e0e0; gap: 40px; }
+        .nav-container { display: flex; gap: 20px; align-items: center; flex-grow: 1; }
+        .nav-item { cursor: pointer; color: #475569; text-decoration: none; font-weight: 500; }
+        .nav-item.active { color: #1aabf0; }
+
         .grid-formularios { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
         .form-card { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .form-card h4 { margin-top: 0; color: #1aabf0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
@@ -16,13 +23,15 @@
     </style>
 </head>
 <body>
-    <header style="background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0;">
+    <header>
         <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width: 140px;">
-        <nav style="display: flex; gap: 20px; align-items: center;">
+        
+        <nav class="nav-container">
             <a href="index.html" class="nav-item">Dashboard</a>
-            <a href="inventario.html" class="nav-item active" style="color: #1aabf0; text-decoration: none; font-weight: 500;">Inventario</a>
-            <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
+            <a href="inventario.html" class="nav-item active">Inventario</a>
         </nav>
+
+        <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
     </header>
 
     <main style="padding: 40px; max-width: 1200px; margin: auto;">
