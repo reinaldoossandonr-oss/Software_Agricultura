@@ -7,10 +7,18 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #f4f7f6; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        header { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; }
+        .nav-item { cursor: pointer; color: #475569; text-decoration: none; font-weight: 500; }
+        .nav-item.active { color: #1aabf0; }
+        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; max-width: 300px; }
+    </style>
 </head>
 <body>
+
     <script>
-        // Verificación de sesión
         window.addEventListener('load', () => {
             if (typeof clienteSupabase !== 'undefined') {
                 clienteSupabase.auth.getSession().then(({ data }) => {
@@ -20,43 +28,46 @@
         });
     </script>
 
-    <div class="dashboard-container">
-        <div class="sidebar">
-            <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width:160px; margin: 0 auto; display: block;">
-            <div style="margin-top: 30px;">
-                <div class="nav-item active" onclick="window.mostrarSeccion('dashboard', this)">📊 Dashboard</div>
-                <div class="nav-item" onclick="window.mostrarSeccion('inventario', this)">📦 Inventario</div>
-                <div class="nav-item" onclick="cerrarSesion()">🚪 Salir</div>
-            </div>
-        </div>
+    <header>
+        <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width: 140px;">
+        <nav style="display: flex; gap: 20px; align-items: center;">
+            <a href="#" onclick="window.mostrarSeccion('dashboard', this)" class="nav-item active">Dashboard</a>
+            <a href="#" onclick="window.mostrarSeccion('inventario', this)" class="nav-item">Inventario</a>
+            <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
+        </nav>
+    </header>
+
+    <main style="padding: 40px; max-width: 1200px; margin: auto;">
         
-        <div class="main-content">
-            <div id="seccion-dashboard">
-                <h2>Dashboard de Logística</h2>
-                <div style="height: 350px; background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
-                    <canvas id="graficoStock"></canvas>
-                </div>
+        <div id="seccion-dashboard">
+            <h2 style="color: #333;">Dashboard de Logística</h2>
+            <div class="card">
+                <canvas id="graficoStock" style="max-height: 300px;"></canvas>
             </div>
 
-            <div id="seccion-inventario" class="hidden">
-                <h2>Control de Inventario</h2>
-                <input type="text" id="buscadorInventario" placeholder="Buscar por SKU, nombre o categoría..." onkeyup="filtrarInventario()" style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc;">
-                
-                <table id="tablaInventario" style="width: 100%; margin-top: 20px; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin:0;">Inventario en Tiempo Real</h3>
+                    <input type="text" id="buscadorInventario" placeholder="Buscar producto..." onkeyup="filtrarInventario()">
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #eee;">
-                            <th style="text-align: left; padding: 15px;">SKU</th>
-                            <th style="text-align: left; padding: 15px;">Nombre</th>
-                            <th style="text-align: left; padding: 15px;">Categoría</th>
-                            <th style="text-align: left; padding: 15px;">Stock</th>
+                        <tr style="text-align: left; color: #666; border-bottom: 2px solid #f1f5f9;">
+                            <th style="padding: 12px;">SKU</th>
+                            <th style="padding: 12px;">Nombre</th>
+                            <th style="padding: 12px;">Categoría</th>
+                            <th style="padding: 12px;">Stock</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaInventario"></tbody>
                 </table>
             </div>
         </div>
-    </div>
-    
+
+        <div id="seccion-inventario" class="hidden">
+            </div>
+    </main>
+
     <script src="script.js"></script>
 </body>
 </html>
