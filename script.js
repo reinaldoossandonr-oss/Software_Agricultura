@@ -31,27 +31,25 @@ window.filtrarInventario = () => {
 // 4. Carga de datos de productos (Tabla actualizada con lógica de reposición)
 async function cargarInventario() {
     try {
-        // Llamada al endpoint de reporte configurado en la vista SQL
+        // Llamada al nuevo endpoint de reporte que consulta la vista SQL en Supabase
         const response = await fetch(`${API_URL}/api/v1/logistica/reporte-inventario`);
         const result = await response.json();
         
         const tabla = document.getElementById('cuerpoTablaInventario');
         if (tabla && result.data) {
             tabla.innerHTML = result.data.map(p => {
-                // Seleccionamos la clase CSS basada en el estado
-                const estadoClase = p['Estado Stock'] === 'REPONER' ? 'status-reponer' : 'status-optimo';
+                // Definimos clase CSS según el estado para resaltar en el dashboard
+                const filaClase = p['Estado Stock'] === 'REPONER' ? 'row-alert' : 'row-optimal';
                 
                 return `
-                    <tr>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9;">${p['Nombre'] || 'N/A'}</td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9;">${p['SKU'] || 'N/A'}</td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${p['Stock Actual'] || 0}</td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9;">${p['Consumo Promedio Diario'] || 0}</td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9;">${p['Dias Inventario'] || 0}</td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
-                            <span class="${estadoClase}">${p['Estado Stock']}</span>
-                        </td>
-                        <td style="padding: 16px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${p['Cantidad a Reponer'] || 0}</td>
+                    <tr class="${filaClase}">
+                        <td style="padding: 12px;">${p['Nombre'] || 'N/A'}</td>
+                        <td style="padding: 12px;">${p['SKU'] || 'N/A'}</td>
+                        <td style="padding: 12px; font-weight: bold;">${p['Stock Actual'] || 0}</td>
+                        <td style="padding: 12px;">${p['Consumo Promedio Diario'] || 0}</td>
+                        <td style="padding: 12px;">${p['Dias Inventario'] || 0}</td>
+                        <td style="padding: 12px; font-weight: bold;">${p['Estado Stock']}</td>
+                        <td style="padding: 12px; color: red; font-weight: bold;">${p['Cantidad a Reponer'] || 0}</td>
                     </tr>
                 `;
             }).join('');
@@ -93,7 +91,6 @@ async function cargarDatosGrafico() {
 // 6. Cierre de sesión
 window.cerrarSesion = async () => {
     try {
-        // Asumiendo que el cliente de Supabase está inicializado globalmente
         if(typeof clienteSupabase !== 'undefined') {
             await clienteSupabase.auth.signOut();
         }
