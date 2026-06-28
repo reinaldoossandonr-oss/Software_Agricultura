@@ -38,11 +38,11 @@ async function cargarInventario() {
         
         const tabla = document.getElementById('cuerpoTablaInventario');
         if (tabla && result.data) {
+            // Renderizado ajustado a la nueva vista (sin categoría)
             tabla.innerHTML = result.data.map(p => `
                 <tr>
                     <td style="padding: 15px;">${p.sku || 'N/A'}</td>
                     <td style="padding: 15px;">${p.nombre || 'Sin nombre'}</td>
-                    <td style="padding: 15px;">${p.categoria || 'Sin categoría'}</td>
                     <td style="padding: 15px; font-weight: bold;">${p.stock_actual || 0}</td>
                 </tr>
             `).join('');
@@ -93,17 +93,16 @@ window.cerrarSesion = async () => {
     }
 };
 
-// 7. Registro de movimientos (Recepción, Picking, Ajuste)
+// 7. Registro de movimientos
 window.registrarMovimiento = async (event, tipo) => {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
     
-    // Convertimos FormData a objeto plano
     const datos = {};
     formData.forEach((value, key) => { datos[key] = value; });
     
-    // LÓGICA: Si es SALIDA, enviamos la cantidad en negativo
+    // Si es SALIDA, enviamos cantidad negativa para que la vista sume correctamente
     if (tipo === 'SALIDA') {
         datos.cantidad = parseFloat(datos.cantidad) * -1;
     }
@@ -120,9 +119,8 @@ window.registrarMovimiento = async (event, tipo) => {
         if (response.ok) {
             alert(`${tipo} registrado con éxito.`);
             form.reset();
-            // Actualizamos la tabla si estamos en la vista de inventario
-            if (typeof cargarInventario === 'function') cargarInventario();
-            if (typeof cargarDatosGrafico === 'function') cargarDatosGrafico();
+            cargarInventario();
+            cargarDatosGrafico();
         } else {
             const err = await response.json();
             alert('Error: ' + (err.detail || 'No se pudo registrar el movimiento.'));
@@ -133,7 +131,6 @@ window.registrarMovimiento = async (event, tipo) => {
     }
 };
 
-// --- INICIALIZACIÓN AUTOMÁTICA ---
 document.addEventListener("DOMContentLoaded", () => {
     cargarInventario();
     cargarDatosGrafico();

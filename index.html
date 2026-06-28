@@ -6,12 +6,14 @@
     <title>Axioma Flux | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #f4f7f6; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        header { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; }
+        /* Header ajustado: flex-grow en el nav para empujar el botón al final */
+        header { background: white; padding: 15px 40px; display: flex; align-items: center; border-bottom: 1px solid #e0e0e0; gap: 40px; }
+        .nav-container { display: flex; gap: 20px; align-items: center; flex-grow: 1; }
         .nav-item { cursor: pointer; color: #475569; text-decoration: none; font-weight: 500; }
         .nav-item.active { color: #1aabf0; }
+        
         .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
         input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; max-width: 300px; }
         .hidden { display: none; }
@@ -19,23 +21,15 @@
 </head>
 <body>
 
-    <script>
-        window.addEventListener('load', () => {
-            if (typeof clienteSupabase !== 'undefined') {
-                clienteSupabase.auth.getSession().then(({ data }) => {
-                    if (!data.session) window.location.href = 'login.html';
-                });
-            }
-        });
-    </script>
-
     <header>
         <img src="https://axiomaanalytics.com/wp-content/uploads/2026/06/Axioma_analyticis_logo_letras_blancas_verde-8.svg" style="width: 140px;">
-        <nav style="display: flex; gap: 20px; align-items: center;">
+        
+        <nav class="nav-container">
             <a href="index.html" class="nav-item active">Dashboard</a>
             <a href="inventario.html" class="nav-item">Inventario</a>
-            <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
         </nav>
+
+        <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
     </header>
 
     <main style="padding: 40px; max-width: 1200px; margin: auto;">
@@ -57,17 +51,14 @@
                         <tr style="text-align: left; color: #666; border-bottom: 2px solid #f1f5f9;">
                             <th style="padding: 12px;">SKU</th>
                             <th style="padding: 12px;">Nombre</th>
-                            <th style="padding: 12px;">Categoría</th>
-                            <th style="padding: 12px;">Stock</th>
+                            <th style="padding: 12px;">Stock Real</th>
                         </tr>
                     </thead>
-                    <tbody id="cuerpoTablaInventario"></tbody>
+                    <tbody id="cuerpoTablaInventario">
+                        </tbody>
                 </table>
             </div>
         </div>
-
-        <div id="seccion-inventario" class="hidden">
-            </div>
     </main>
 
     <script src="script.js"></script>

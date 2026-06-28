@@ -22,14 +22,6 @@ app.add_middleware(
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 # --- MODELOS ---
-class Producto(BaseModel):
-    empresa_id: str
-    sku: str
-    nombre: str
-    categoria: str
-    stock_actual: float
-    proveedor: str
-
 class Movimiento(BaseModel):
     empresa_id: str
     producto_id: str
@@ -43,27 +35,26 @@ class Movimiento(BaseModel):
 def ruta_raiz():
     return {"status": "online", "message": "Backend Axioma Logística listo"}
 
-# 1. Obtener inventario
+# 1. Obtener inventario (Ahora consulta la VISTA en lugar de la tabla productos)
 @app.get("/api/v1/logistica/stock")
 def obtener_stock():
     try:
-        response = supabase.table("productos").select("sku, nombre, categoria, stock_actual").execute()
+        # Consultamos la vista creada en Supabase
+        response = supabase.table("vista_stock_detallado").select("sku, nombre, stock_actual").execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # 2. Registrar movimiento
-# Nota: Ahora el backend no busca UUIDs, registra directamente el texto 
-# y espera que la lógica del frontend envíe la cantidad con signo (+ o -)
 @app.post("/api/v1/logistica/movimientos")
 def registrar_movimiento(movimiento: Movimiento):
     try:
         data_to_insert = movimiento.dict(exclude_none=True)
         
-        # Generar ID único localmente ya que la tabla es TEXT
+        # Generar ID único localmente
         data_to_insert["id"] = str(uuid.uuid4())
         
-        # Insertar directamente sin búsquedas ni validaciones de UUID
+        # Insertar directamente en la tabla de movimientos (que ya definimos como TEXT)
         supabase.table("movimientos").insert(data_to_insert).execute()
         return {"success": True, "message": "Movimiento registrado correctamente"}
     except Exception as e:
