@@ -6,16 +6,6 @@
     <title>Axioma Flux | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background-color: #f4f7f6; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        header { background: white; padding: 15px 40px; display: flex; align-items: center; border-bottom: 1px solid #e0e0e0; gap: 40px; }
-        .nav-container { display: flex; gap: 20px; align-items: center; flex-grow: 1; }
-        .nav-item { cursor: pointer; color: #475569; text-decoration: none; font-weight: 500; }
-        .nav-item.active { color: #1aabf0; }
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; max-width: 300px; }
-        .hidden { display: none; }
-    </style>
 </head>
 <body>
 
@@ -25,15 +15,14 @@
         <nav class="nav-container">
             <a href="#" class="nav-item active" onclick="mostrarSeccion('dashboard', this)">Dashboard</a>
             <a href="#" class="nav-item" onclick="mostrarSeccion('inventario', this)">Inventario</a>
+            <a href="#" class="nav-item" onclick="mostrarSeccion('movimientos', this)">Movimientos</a>
         </nav>
 
-        <button onclick="cerrarSesion()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Salir</button>
+        <button onclick="cerrarSesion()">Salir</button>
     </header>
 
-    <main style="padding: 40px; max-width: 1200px; margin: auto;">
-        
+    <main>
         <div id="seccion-dashboard">
-            <h2 style="color: #333;">Dashboard de Logística</h2>
             <div class="card">
                 <canvas id="graficoStock" style="max-height: 300px;"></canvas>
             </div>
@@ -42,23 +31,42 @@
         <div id="seccion-inventario" class="hidden">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin:0;">Inventario en Tiempo Real</h3>
+                    <h3>Inventario en Tiempo Real</h3>
                     <input type="text" id="buscadorInventario" placeholder="Buscar producto..." onkeyup="filtrarInventario()">
                 </div>
-                <table style="width: 100%; border-collapse: collapse;">
+                <table>
                     <thead>
-                        <tr style="text-align: left; color: #666; border-bottom: 2px solid #f1f5f9;">
-                            <th style="padding: 12px;">Nombre</th>
-                            <th style="padding: 12px;">SKU</th>
-                            <th style="padding: 12px;">Stock Real</th>
-                            <th style="padding: 12px;">Consumo</th>
-                            <th style="padding: 12px;">Días</th>
-                            <th style="padding: 12px;">Estado</th>
-                            <th style="padding: 12px;">Reponer</th>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>SKU</th>
+                            <th>Stock Real</th>
+                            <th>Consumo</th>
+                            <th>Días</th>
+                            <th>Estado</th>
+                            <th>Reponer</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaInventario"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <div id="seccion-movimientos" class="hidden">
+            <div class="card">
+                <h3>Registrar Entrada</h3>
+                <form onsubmit="registrarMovimiento(event, 'ENTRADA')">
+                    <input type="text" name="sku" placeholder="SKU" required>
+                    <input type="number" name="cantidad" placeholder="Cantidad" required>
+                    <button type="submit">Registrar Entrada</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3>Registrar Salida</h3>
+                <form onsubmit="registrarMovimiento(event, 'SALIDA')">
+                    <input type="text" name="sku" placeholder="SKU" required>
+                    <input type="number" name="cantidad" placeholder="Cantidad" required>
+                    <button type="submit">Registrar Salida</button>
+                </form>
             </div>
         </div>
     </main>
