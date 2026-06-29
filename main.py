@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from supabase import create_client, Client
+from supabase import create_client
 from pydantic import BaseModel
 import os
 import uuid
@@ -32,86 +32,84 @@ class Movimiento(BaseModel):
 def get_secure_client(request: Request):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token no proporcionado o inválido")
+        raise HTTPException(status_code=401, detail="Token no proporcionado")
     
     token = auth_header.split(" ")[1]
     supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     supabase.postgrest.auth(token)
-    return supabase
+    return supabase, token
+
+# --- FUNCION MAESTRA: OBTENER EMPRESA POR EMAIL ---
+def obtener_empresa_id(supabase, token):
+    user_auth = supabase.auth.get_user(token)
+    email = user_auth.user.email
+    
+    perfil = supabase.table("perfiles_usuario") \
+        .select("empresa_id") \
+        .eq("email", email) \
+        .single().execute()
+        
+    return perfil.data["empresa_id"]
 
 # --- ENDPOINTS ---
 
-@app.get("/")
-def ruta_raiz():
-    return {"status": "online", "message": "Backend Axioma Logística listo"}
-
-# Nuevo endpoint para obtener info de empresa
 @app.get("/api/v1/usuario/info")
 def obtener_info_usuario(request: Request):
     try:
-        supabase = get_secure_client(request)
-        user = supabase.auth.get_user()
-        
-        # Consultamos el empresa_id asociado al UID del token en tu tabla de perfiles
-        info = supabase.table("perfiles_usuario") \
-            .select("empresa_id") \
-            .eq("user_id", user.user.id) \
-            .single().execute()
-            
-        return {"empresa_id": info.data["empresa_id"]}
+        supabase, token = get_secure_client(request)
+        return {"empresa_id": obtener_empresa_id(supabase, token)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 1. Obtener inventario (Filtrado explícito por empresa_id)
 @app.get("/api/v1/logistica/stock")
 def obtener_stock(request: Request):
     try:
-        supabase = get_secure_client(request)
-        user = supabase.auth.get_user()
+        supabase, token = get_secure_client(request)
+        empresa_id = obtener_empresa_id(supabase, token)
         
-        perfil = supabase.table("perfiles_usuario").select("empresa_id").eq("user_id", user.user.id).single().execute()
-        empresa_id = perfil.data["empresa_id"]
-        
-        response = supabase.table("vista_stock_detallado").select("producto_id, sku, nombre, stock_actual").eq("empresa_id", empresa_id).execute()
+        response = supabase.table("vista_stock_detallado") \
+            .select("*").eq("empresa_id", empresa_id).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 2. Obtener reporte completo (Filtrado explícito por empresa_id)
 @app.get("/api/v1/logistica/reporte-inventario")
 def obtener_reporte_inventario(request: Request):
     try:
-        supabase = get_secure_client(request)
-        user = supabase.auth.get_user()
+        supabase, token = get_secure_client(request)
+        empresa_id = obtener_empresa_id(supabase, token)
         
-        perfil = supabase.table("perfiles_usuario").select("empresa_id").eq("user_id", user.user.id).single().execute()
-        empresa_id = perfil.data["empresa_id"]
-        
-        response = supabase.table("vista_reporte_inventario").select("*").eq("empresa_id", empresa_id).execute()
+        response = supabase.table("vista_reporte_inventario") \
+            .select("*").eq("empresa_id", empresa_id).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Ventas diarias
 @app.get("/api/v1/logistica/ventas-diarias")
 def obtener_ventas_diarias(request: Request):
     try:
-        supabase = get_secure_client(request)
-        response = supabase.table("vista_ventas_diarias").select("*").execute()
+        supabase, token = get_secure_client(request)
+        empresa_id = obtener_empresa_id(supabase, token)
+        
+        response = supabase.table("vista_ventas_diarias") \
+            .select("*").eq("empresa_id", empresa_id).execute()
         labels = [str(row['fecha']) for row in response.data]
         data = [float(row['total_ventas']) for row in response.data]
         return {"labels": labels, "data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-# 4. Registrar movimiento
 @app.post("/api/v1/logistica/movimientos")
 def registrar_movimiento(movimiento: Movimiento, request: Request):
     try:
-        supabase = get_secure_client(request)
+        supabase, token = get_secure_client(request)
+        empresa_id = obtener_empresa_id(supabase, token)
+        
         data_to_insert = movimiento.dict(exclude_none=True)
         data_to_insert["id"] = str(uuid.uuid4())
+        data_to_insert["empresa_id"] = empresa_id # Seguridad adicional
+        
         supabase.table("movimientos").insert(data_to_insert).execute()
-        return {"success": True, "message": "Movimiento registrado correctamente"}
+        return {"success": True, "message": "Movimiento registrado"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

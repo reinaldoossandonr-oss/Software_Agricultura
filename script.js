@@ -25,30 +25,25 @@ function mostrarUsuario() {
     }
 }
 
-// Nueva función corregida para obtener y mostrar el empresa_id
+// Nueva función optimizada para obtener el empresa_id
 async function mostrarEmpresa() {
+    const el = document.getElementById('empresa-display');
     try {
-        // Llamamos a nuestro nuevo endpoint del backend
         const response = await fetch(`${API_URL}/api/v1/usuario/info`, { 
             headers: getHeaders() 
         });
         
-        if (!response.ok) {
-            console.error("No se pudo obtener info de empresa:", response.status);
-            return;
-        }
+        if (!response.ok) throw new Error("No se pudo obtener info de empresa");
 
         const result = await response.json();
         
-        // --- AQUÍ ESTÁ LA CLAVE ---
-        const el = document.getElementById('empresa-display');
         if (el) {
             el.innerText = result.empresa_id || 'Sin empresa';
-            // Guardamos esto en memoria local para que otras funciones lo usen
             localStorage.setItem('empresa_id', result.empresa_id);
         }
     } catch (e) {
         console.error("Error al obtener empresa:", e);
+        if (el) el.innerText = "Error";
     }
 }
 
@@ -81,6 +76,7 @@ window.filtrarInventario = () => {
 // Función para cerrar sesión
 window.cerrarSesion = () => {
     localStorage.removeItem('supabase_token');
+    localStorage.removeItem('empresa_id');
     window.location.href = 'login.html';
 };
 
@@ -204,14 +200,10 @@ window.registrarMovimiento = async (event, tipo) => {
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("Iniciando carga de dashboard...");
     
-    // Mostramos usuario y empresa al cargar
     mostrarUsuario();
-    mostrarEmpresa();
+    // Primero obtenemos la empresa, y una vez obtenida, cargamos los datos
+    await mostrarEmpresa();
     
-    if (!localStorage.getItem('supabase_token')) {
-        console.warn("Advertencia: No hay token guardado.");
-    }
-
     try {
         await Promise.all([
             cargarInventario(),
