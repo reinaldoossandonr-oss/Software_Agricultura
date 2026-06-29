@@ -62,22 +62,32 @@ def obtener_info_usuario(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 1. Obtener inventario
+# 1. Obtener inventario (Filtrado explícito por empresa_id)
 @app.get("/api/v1/logistica/stock")
 def obtener_stock(request: Request):
     try:
         supabase = get_secure_client(request)
-        response = supabase.table("vista_stock_detallado").select("producto_id, sku, nombre, stock_actual").execute()
+        user = supabase.auth.get_user()
+        
+        perfil = supabase.table("perfiles_usuario").select("empresa_id").eq("user_id", user.user.id).single().execute()
+        empresa_id = perfil.data["empresa_id"]
+        
+        response = supabase.table("vista_stock_detallado").select("producto_id, sku, nombre, stock_actual").eq("empresa_id", empresa_id).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 2. Obtener reporte completo
+# 2. Obtener reporte completo (Filtrado explícito por empresa_id)
 @app.get("/api/v1/logistica/reporte-inventario")
 def obtener_reporte_inventario(request: Request):
     try:
         supabase = get_secure_client(request)
-        response = supabase.table("vista_reporte_inventario").select("*").execute()
+        user = supabase.auth.get_user()
+        
+        perfil = supabase.table("perfiles_usuario").select("empresa_id").eq("user_id", user.user.id).single().execute()
+        empresa_id = perfil.data["empresa_id"]
+        
+        response = supabase.table("vista_reporte_inventario").select("*").eq("empresa_id", empresa_id).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
