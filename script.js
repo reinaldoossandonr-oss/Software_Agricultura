@@ -15,7 +15,6 @@ function mostrarUsuario() {
     if (!token) return;
 
     try {
-        // Decodificamos la parte 'payload' del JWT
         const payload = JSON.parse(atob(token.split('.')[1]));
         const email = payload.email || 'Usuario';
         
@@ -26,14 +25,20 @@ function mostrarUsuario() {
     }
 }
 
-// Nueva función para obtener y mostrar el empresa_id
+// Nueva función corregida para obtener y mostrar el empresa_id
 async function mostrarEmpresa() {
     try {
         const response = await fetch(`${API_URL}/api/v1/usuario/info`, { headers: getHeaders() });
         const result = await response.json();
         
+        // Debug: Mira qué devuelve la API en la consola (F12)
+        console.log("Respuesta de API empresa:", result);
+        
         const el = document.getElementById('empresa-display');
-        if (el) el.innerText = result.empresa_id || 'Sin empresa';
+        if (el) {
+            // Verificamos si existe el campo en el objeto result
+            el.innerText = result.empresa_id || 'Sin empresa';
+        }
     } catch (e) {
         console.error("Error al obtener empresa:", e);
     }
@@ -116,7 +121,7 @@ async function cargarDatosGrafico() {
     try {
         const response = await fetch(`${API_URL}/api/v1/logistica/stock`, { headers: getHeaders() });
         const result = await response.json();
-        const data = result.data;
+        const data = result.data || [];
 
         if (miGrafico) miGrafico.destroy();
         miGrafico = new Chart(ctx.getContext('2d'), { 
@@ -142,10 +147,10 @@ async function cargarGraficoVentas() {
         graficoVentas = new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: result.labels,
+                labels: result.labels || [],
                 datasets: [{
                     label: 'Unidades Vendidas',
-                    data: result.data,
+                    data: result.data || [],
                     borderColor: '#1aabf0',
                     backgroundColor: 'rgba(26, 171, 240, 0.1)',
                     tension: 0.4,
@@ -195,7 +200,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     mostrarUsuario();
     mostrarEmpresa();
     
-    // Verificación sin redirección automática
     if (!localStorage.getItem('supabase_token')) {
         console.warn("Advertencia: No hay token guardado.");
     }
