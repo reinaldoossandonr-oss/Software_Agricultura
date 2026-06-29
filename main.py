@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from pydantic import BaseModel
 import os
 import uuid
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
 
 # Configuración
 load_dotenv()
@@ -24,8 +23,7 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 # --- MODELOS ---
 class Movimiento(BaseModel):
-    empresa_id: str
-    producto_id: str
+    producto_id: str 
     tipo: str
     cantidad: float
     ubicacion_id: str = None 
@@ -36,11 +34,12 @@ class Movimiento(BaseModel):
 def ruta_raiz():
     return {"status": "online", "message": "Backend Axioma Logística listo"}
 
-# 1. Obtener inventario simple
+# 1. Obtener inventario (Filtrado automáticamente por RLS)
 @app.get("/api/v1/logistica/stock")
 def obtener_stock():
     try:
-        response = supabase.table("vista_stock_detallado").select("sku, nombre, stock_actual").execute()
+        # La vista ya tiene los joins por producto_id y la RLS filtra por empresa
+        response = supabase.table("vista_stock_detallado").select("producto_id, sku, nombre, stock_actual").execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -54,14 +53,12 @@ def obtener_reporte_inventario():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Nuevo Endpoint: Ventas diarias (Gráfico de línea)
+# 3. Ventas diarias
 @app.get("/api/v1/logistica/ventas-diarias")
 def obtener_ventas_diarias():
     try:
-        # Consulta a la vista SQL creada en Supabase
         response = supabase.table("vista_ventas_mensuales").select("*").execute()
         
-        # Transformamos los datos para Chart.js
         labels = [str(row['fecha']) for row in response.data]
         data = [float(row['total']) for row in response.data]
         
@@ -71,12 +68,24 @@ def obtener_ventas_diarias():
 
 # 4. Registrar movimiento
 @app.post("/api/v1/logistica/movimientos")
-def registrar_movimiento(movimiento: Movimiento):
+def registrar_movimiento(movimiento: Movimiento, request: Request):
     try:
+        # Extraer token de autenticación para que Supabase identifique al usuario
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise HTTPException(status_code=401, detail="No autorizado")
+        
+        token = auth_header.split(" ")[1]
+        
+        # Preparar inserción
         data_to_insert = movimiento.dict(exclude_none=True)
         data_to_insert["id"] = str(uuid.uuid4())
         
+        # Ejecutar con el token del usuario actual
+        # El RLS y el Trigger de BD se encargarán del empresa_id
+        supabase.postgrest.auth(token)
         supabase.table("movimientos").insert(data_to_insert).execute()
+        
         return {"success": True, "message": "Movimiento registrado correctamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
