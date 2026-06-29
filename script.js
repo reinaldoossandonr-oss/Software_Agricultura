@@ -28,16 +28,24 @@ function mostrarUsuario() {
 // Nueva función corregida para obtener y mostrar el empresa_id
 async function mostrarEmpresa() {
     try {
-        const response = await fetch(`${API_URL}/api/v1/usuario/info`, { headers: getHeaders() });
+        // Llamamos a nuestro nuevo endpoint del backend
+        const response = await fetch(`${API_URL}/api/v1/usuario/info`, { 
+            headers: getHeaders() 
+        });
+        
+        if (!response.ok) {
+            console.error("No se pudo obtener info de empresa:", response.status);
+            return;
+        }
+
         const result = await response.json();
         
-        // Debug: Mira qué devuelve la API en la consola (F12)
-        console.log("Respuesta de API empresa:", result);
-        
+        // --- AQUÍ ESTÁ LA CLAVE ---
         const el = document.getElementById('empresa-display');
         if (el) {
-            // Verificamos si existe el campo en el objeto result
             el.innerText = result.empresa_id || 'Sin empresa';
+            // Guardamos esto en memoria local para que otras funciones lo usen
+            localStorage.setItem('empresa_id', result.empresa_id);
         }
     } catch (e) {
         console.error("Error al obtener empresa:", e);
