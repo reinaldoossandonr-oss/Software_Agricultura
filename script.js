@@ -26,6 +26,19 @@ function mostrarUsuario() {
     }
 }
 
+// Nueva función para obtener y mostrar el empresa_id
+async function mostrarEmpresa() {
+    try {
+        const response = await fetch(`${API_URL}/api/v1/usuario/info`, { headers: getHeaders() });
+        const result = await response.json();
+        
+        const el = document.getElementById('empresa-display');
+        if (el) el.innerText = result.empresa_id || 'Sin empresa';
+    } catch (e) {
+        console.error("Error al obtener empresa:", e);
+    }
+}
+
 // 2. Función global de navegación
 window.mostrarSeccion = (id, el) => {
     document.querySelectorAll('main > div[id^="seccion-"]').forEach(s => s.classList.add('hidden'));
@@ -178,8 +191,9 @@ window.registrarMovimiento = async (event, tipo) => {
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("Iniciando carga de dashboard...");
     
-    // Mostramos el usuario al cargar
+    // Mostramos usuario y empresa al cargar
     mostrarUsuario();
+    mostrarEmpresa();
     
     // Verificación sin redirección automática
     if (!localStorage.getItem('supabase_token')) {
