@@ -105,7 +105,7 @@ async function cargarGraficoVentas() {
     if (!ctx) return;
     try {
         const response = await fetch(`${API_URL}/api/v1/logistica/ventas-diarias`, { headers: getHeaders() });
-        if (!response.ok) throw new Error("Error en servidor");
+        if (!response.ok) throw new Error("Error en servidor: " + response.status);
         const result = await response.json(); 
         
         if (graficoVentas) graficoVentas.destroy();
@@ -158,13 +158,22 @@ window.registrarMovimiento = async (event, tipo) => {
     } catch (err) { alert("Error de conexión."); }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Verificación de seguridad básica: si no hay token, fuera al login
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("Iniciando carga de dashboard...");
+    
+    // Verificación sin redirección automática
     if (!localStorage.getItem('supabase_token')) {
-        window.location.href = 'login.html';
-        return;
+        console.warn("Advertencia: No hay token guardado.");
     }
-    cargarInventario();
-    cargarDatosGrafico();
-    cargarGraficoVentas();
+
+    try {
+        await Promise.all([
+            cargarInventario(),
+            cargarDatosGrafico(),
+            cargarGraficoVentas()
+        ]);
+        console.log("Carga de datos finalizada.");
+    } catch (err) {
+        console.error("Error detectado en la carga inicial:", err);
+    }
 });
