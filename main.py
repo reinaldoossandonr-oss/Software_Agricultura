@@ -18,8 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Conexión Supabase
-supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+# Conexión Supabase (Usamos la clave ANON_KEY desde el .env)
+# La clave es global ahora, pero cada endpoint la usará con el token del usuario
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
 # --- MODELOS ---
 class Movimiento(BaseModel):
@@ -43,6 +45,7 @@ def obtener_stock(request: Request):
             raise HTTPException(status_code=401, detail="No autorizado")
         token = auth_header.split(" ")[1]
         
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
         supabase.postgrest.auth(token)
         response = supabase.table("vista_stock_detallado").select("producto_id, sku, nombre, stock_actual").execute()
         return {"success": True, "data": response.data}
@@ -58,6 +61,7 @@ def obtener_reporte_inventario(request: Request):
             raise HTTPException(status_code=401, detail="No autorizado")
         token = auth_header.split(" ")[1]
         
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
         supabase.postgrest.auth(token)
         response = supabase.table("vista_reporte_inventario").select("*").execute()
         return {"success": True, "data": response.data}
@@ -73,6 +77,7 @@ def obtener_ventas_diarias(request: Request):
             raise HTTPException(status_code=401, detail="No autorizado")
         token = auth_header.split(" ")[1]
         
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
         supabase.postgrest.auth(token)
         response = supabase.table("vista_ventas_diarias").select("*").execute()
         
@@ -97,6 +102,7 @@ def registrar_movimiento(movimiento: Movimiento, request: Request):
         data_to_insert = movimiento.dict(exclude_none=True)
         data_to_insert["id"] = str(uuid.uuid4())
         
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
         supabase.postgrest.auth(token)
         supabase.table("movimientos").insert(data_to_insert).execute()
         
