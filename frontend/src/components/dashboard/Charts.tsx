@@ -50,7 +50,7 @@ export function StockCategoriaChart({ data }: StockCategoriaProps) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: ctx => ` ${ctx.parsed.y.toLocaleString('es-CL')} unidades`,
+              label: ctx => ` ${(ctx.parsed.y ?? 0).toLocaleString('es-CL')} unidades`,
             },
           },
         },
@@ -104,7 +104,7 @@ export function SalidasMensualesChart({ data }: SalidasProps) {
           tooltip: {
             callbacks: {
               label: ctx =>
-                ` $${ctx.parsed.y.toLocaleString('es-CL', { maximumFractionDigits: 0 })}`,
+                ` $${(ctx.parsed.y ?? 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`,
             },
           },
         },
