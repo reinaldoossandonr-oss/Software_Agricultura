@@ -3,10 +3,9 @@ Dependencias de autenticación para FastAPI.
 
 Flujo:
   1. El frontend envía: Authorization: Bearer <supabase_jwt>
-  2. Decodificamos el JWT localmente (sin llamada a la API → rápido).
-  3. Buscamos el perfil del usuario en perfiles_usuarios para obtener
-     empresa_id y rol (usando el cliente admin, ya que el token aún
-     no tiene empresa_id en el claim).
+  2. Verificamos el token llamando a Supabase auth.get_user(token)
+     → Supabase valida la firma, expiración y formato del JWT.
+  3. Buscamos el perfil en perfiles_usuarios para obtener empresa_id y rol.
   4. Inyectamos CurrentUser en cada endpoint que lo necesite.
 
 CRÍTICO: empresa_id NUNCA viene del body/query — siempre del perfil en BD.
@@ -14,12 +13,9 @@ CRÍTICO: empresa_id NUNCA viene del body/query — siempre del perfil en BD.
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel
 
-from config.settings import settings
-from database.client import get_user_client, get_admin_client
+from database.client import get_admin_client
 
 
 bearer_scheme = HTTPBearer()
@@ -34,37 +30,29 @@ class CurrentUser(BaseModel):
     token: str          # JWT original, para construir el user_client
 
 
-def _decode_token(token: str) -> dict:
-    """Decodifica y valida el JWT de Supabase localmente."""
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> CurrentUser:
+    token = credentials.credentials
+    admin = get_admin_client()
+
+    # Verificar el token via Supabase (delega firma + expiración a Supabase)
     try:
-        payload = jwt.decode(
-            token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        return payload
-    except InvalidTokenError as e:
+        auth_response = admin.auth.get_user(token)
+        supabase_user = auth_response.user
+        if not supabase_user:
+            raise HTTPException(status_code=401, detail="Token inválido")
+        user_id = supabase_user.id
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token inválido o expirado: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-) -> CurrentUser:
-    token = credentials.credentials
-    payload = _decode_token(token)
-    user_id: str = payload.get("sub")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Token sin subject (sub)")
-
-    # Obtener empresa_id y rol desde la BD
-    # Usamos admin_client para saltear RLS en esta consulta inicial
-    admin = get_admin_client()
+    # Obtener empresa_id y rol desde perfiles_usuarios
     result = (
         admin.table("perfiles_usuarios")
         .select("empresa_id, rol, nombre, email")
@@ -95,9 +83,6 @@ def require_rol(*roles: str):
     """
     Dependencia que verifica que el usuario tenga uno de los roles indicados.
     'admin' siempre pasa (tiene todos los permisos).
-
-    Uso:
-        @router.delete("/{id}", dependencies=[Depends(require_rol("admin"))])
     """
     async def _check(user: CurrentUser = Depends(get_current_user)):
         if user.rol not in (*roles, "admin"):
