@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -32,11 +33,31 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [perfil, setPerfil] = useState<{ nombre: string; email: string } | null>(null)
+
+  useEffect(() => {
+    async function cargarPerfil() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('perfiles_usuarios')
+        .select('nombre, email')
+        .eq('user_id', user.id)
+        .single()
+      if (data) setPerfil(data)
+    }
+    cargarPerfil()
+  }, [])
 
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  // Iniciales para el avatar (máx 2 letras)
+  const iniciales = perfil?.nombre
+    ? perfil.nombre.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
 
   return (
     <aside className="w-64 min-h-screen bg-sidebar flex flex-col fixed left-0 top-0 z-30">
@@ -87,15 +108,33 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-slate-800">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-        >
-          <LogoutIcon className="w-4 h-4" />
-          Cerrar sesión
-        </button>
+      {/* Perfil de usuario */}
+      <div className="px-3 py-3 border-t border-slate-800">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-800/60 transition-colors group">
+          {/* Avatar con iniciales */}
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0 text-white text-xs font-bold shadow-sm">
+            {iniciales}
+          </div>
+
+          {/* Nombre y email */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-semibold leading-tight truncate">
+              {perfil?.nombre ?? '—'}
+            </p>
+            <p className="text-slate-500 text-[10px] leading-tight truncate mt-0.5">
+              {perfil?.email ?? ''}
+            </p>
+          </div>
+
+          {/* Botón logout */}
+          <button
+            onClick={handleLogout}
+            title="Cerrar sesión"
+            className="flex-shrink-0 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <LogoutIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </aside>
   )
