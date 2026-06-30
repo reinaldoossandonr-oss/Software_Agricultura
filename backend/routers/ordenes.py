@@ -72,7 +72,7 @@ async def crear_orden(
         "tipo": body.tipo,
         "referencia": body.referencia,
         "observaciones": body.observaciones,
-        "usuario_id": user.user_id,
+        "usuario_id": user.perfil_id,
         "estado": "borrador",
     }
     try:
