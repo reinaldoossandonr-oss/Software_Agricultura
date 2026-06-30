@@ -3,13 +3,13 @@
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, BarElement, LineElement,
-  PointElement, Title, Tooltip, Legend, ArcElement,
+  PointElement, Title, Tooltip, Legend, ArcElement, Filler,
 } from 'chart.js'
 import { Bar, Line, Doughnut } from 'react-chartjs-2'
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, LineElement,
-  PointElement, Title, Tooltip, Legend, ArcElement
+  PointElement, Title, Tooltip, Legend, ArcElement, Filler
 )
 
 const PRIMARY = '#1AABF0'
