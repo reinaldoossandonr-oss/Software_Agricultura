@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import AxiomaIcon from '@/components/ui/AxiomaIcon'
 
 const navItems = [
   {
@@ -74,10 +75,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       <div className="px-6 py-5 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
+            <AxiomaIcon className="w-4 h-4" />
           </div>
           <div>
             <p className="text-white font-semibold text-sm leading-none">Axioma Flux</p>
