@@ -22,7 +22,8 @@ bearer_scheme = HTTPBearer()
 
 
 class CurrentUser(BaseModel):
-    user_id: str
+    user_id: str        # auth.users.id (UUID de Supabase Auth)
+    perfil_id: str      # perfiles_usuarios.id (PK del perfil — usar en FKs)
     empresa_id: str
     rol: str
     nombre: str
@@ -52,10 +53,10 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Obtener empresa_id y rol desde perfiles_usuarios
+    # Obtener empresa_id, rol e id del perfil desde perfiles_usuarios
     result = (
         admin.table("perfiles_usuarios")
-        .select("empresa_id, rol, nombre, email")
+        .select("id, empresa_id, rol, nombre, email")
         .eq("user_id", user_id)
         .eq("activo", True)
         .single()
@@ -71,6 +72,7 @@ async def get_current_user(
     perfil = result.data
     return CurrentUser(
         user_id=user_id,
+        perfil_id=perfil["id"],      # PK de perfiles_usuarios — para FKs
         empresa_id=perfil["empresa_id"],
         rol=perfil["rol"],
         nombre=perfil["nombre"],
